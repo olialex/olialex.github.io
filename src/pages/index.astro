@@ -3,54 +3,77 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/Hero.astro';
 import PostCard from '../components/PostCard.astro';
+import Slider from '../components/Slider.astro';
 import { primeraImagen } from '../utils/primeraImagen.js';
 
 const posts = await getCollection('blog');
 posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
-const destacados = posts.filter((p) => p.data.destacado).slice(0, 3);
-const ultimos = posts.slice(0, 6);
+const destacados = posts.filter((p) => p.data.destacado).slice(0, 5);
+const resto = posts.filter((p) => !destacados.some((d) => d.id === p.id));
+
+const slidesHero = posts
+  .map((p) => ({ p, image: p.data.portada ?? primeraImagen(p.body) }))
+  .filter((x) => x.image)
+  .slice(0, 3)
+  .map(({ p, image }) => ({
+    image,
+    title: p.data.title,
+    tag: p.data.tags[0],
+    fecha: p.data.pubDate.toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }),
+    href: `/blog/${p.id}/`,
+  }));
 ---
 
-<BaseLayout pageTitle="Inicio - Mi Blog" wide>
-  <Hero
-    title="Ideas, proyectos e historias interactivas"
-    subtitle="Un espacio para escribir, dibujar y experimentar con scrollytelling."
-  />
+<BaseLayout pageTitle="Inicio - Mi Blog" wide conHero={slidesHero.length > 0}>
+  <Fragment slot="hero">
+    {slidesHero.length > 0 && <Hero slides={slidesHero} />}
+  </Fragment>
 
   <div class="container">
     {destacados.length > 0 && (
-      <section>
+      <section class="destacados fondo-trama">
         <h2>Destacados</h2>
-        <div class="grid">
+        <Slider>
           {destacados.map((p) => (
+            <div>
+              <PostCard
+                id={p.id}
+                title={p.data.title}
+                description={p.data.description}
+                date={p.data.pubDate}
+                image={p.data.portada ?? primeraImagen(p.body)}
+                tags={p.data.tags}
+              />
+            </div>
+          ))}
+        </Slider>
+      </section>
+    )}
+
+    {resto.length > 0 && (
+      <section>
+        <h2>Todas las entradas</h2>
+        <div class="portadas bento">
+          {resto.map((p) => (
             <PostCard
               id={p.id}
               title={p.data.title}
               description={p.data.description}
               date={p.data.pubDate}
-              image={primeraImagen(p.body)}
+              image={p.data.portada ?? primeraImagen(p.body)}
+              tags={p.data.tags}
             />
           ))}
         </div>
+        <p class="mas"><a href="/blog">Explorar todas →</a></p>
       </section>
     )}
-
-    <section>
-      <h2>Últimos posts</h2>
-      <div class="grid">
-        {ultimos.map((p) => (
-          <PostCard
-            id={p.id}
-            title={p.data.title}
-            description={p.data.description}
-            date={p.data.pubDate}
-            image={primeraImagen(p.body)}
-          />
-        ))}
-      </div>
-      <p class="mas"><a href="/blog">Ver todas las entradas →</a></p>
-    </section>
   </div>
 </BaseLayout>
 
@@ -59,13 +82,7 @@ const ultimos = posts.slice(0, 6);
     padding-block: 3rem 1rem;
   }
   h2 {
-    margin: 0 0 1.5rem;
-    font-size: 1.5rem;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1.25rem;
+    margin: 0 0 1.25rem;
   }
   .mas {
     margin-top: 1.5rem;

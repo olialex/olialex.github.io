@@ -3,6 +3,7 @@ import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PostCard from '../../components/PostCard.astro';
 import { primeraImagen } from '../../utils/primeraImagen.js';
+import Hero from '../../components/Hero.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -10,10 +11,14 @@ export async function getStaticPaths() {
     params: { slug: post.id },
     props: post,
   }));
+
 }
+
 
 const post = Astro.props;
 const { Content } = await render(post);
+
+const portada = post.data.portada ?? primeraImagen(post.body);
 
 const fecha = post.data.pubDate.toLocaleDateString('es-ES', {
   day: 'numeric',
@@ -45,9 +50,20 @@ const destacados = otros
   .filter((p) => p.data.destacado && !relacionados.some((r) => r.id === p.id))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
+
 ---
 
-<BaseLayout pageTitle={`${post.data.title} - Mi Blog`} wide>
+<BaseLayout pageTitle={`${post.data.title} - Mi Blog`} wide conHero={!!portada}>
+
+  <Fragment slot="hero">
+    {portada && (
+      <Hero
+        esEntrada
+        slides={[{ image: portada, title: post.data.title, tag: post.data.tags[0], fecha }]}
+      />
+    )}
+  </Fragment>
+
   <div class="shell">
     <aside class="col col-izq">
       <div class="caja">Columna izquierda<br /><small>(por definir)</small></div>
@@ -56,11 +72,15 @@ const destacados = otros
     <article class="principal">
       <header>
         <a href="/blog" class="volver">← Entradas</a>
-        <h1>{post.data.title}</h1>
-        <p class="meta">{fecha}</p>
+        {!portada && (
+          <>
+            <h1>{post.data.title}</h1>
+            <p class="meta">{fecha}</p>
+          </>
+        )}
         {post.data.tags.length > 0 && (
           <ul class="tags">
-            {post.data.tags.map((t) => <li>{t}</li>)}
+            {post.data.tags.map((t) => (<li><a href={`/blog?etiqueta=${t}`}>{t}</a></li>))}
           </ul>
         )}
       </header>
@@ -88,7 +108,7 @@ const destacados = otros
               title={p.data.title}
               description={p.data.description}
               date={p.data.pubDate}
-              image={primeraImagen(p.body)}
+              image={p.data.portada ?? primeraImagen(p.body)}
             />
           ))}
         </div>
@@ -105,7 +125,7 @@ const destacados = otros
               title={p.data.title}
               description={p.data.description}
               date={p.data.pubDate}
-              image={primeraImagen(p.body)}
+              image={p.data.portada ?? primeraImagen(p.body)}
             />
           ))}
         </div>
@@ -113,6 +133,8 @@ const destacados = otros
     )}
   </div>
 </BaseLayout>
+
+
 
 <style>
   .shell {
@@ -182,6 +204,14 @@ const destacados = otros
     border-radius: 999px;
     color: var(--muted);
     font-size: 0.85rem;
+  }
+
+  .tags a {
+    color: inherit;
+  }
+  .tags li:hover {
+    background: var(--accent);
+    color: #111;
   }
 
   .contenido {

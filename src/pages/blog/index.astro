@@ -6,52 +6,162 @@ import { primeraImagen } from '../../utils/primeraImagen.js';
 
 const posts = await getCollection('blog');
 posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const etiquetas = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
 ---
 
 <BaseLayout pageTitle="Entradas - Mi Blog">
-  <header class="intro">
+  <section class="intro fondo-trama">
     <h1>Entradas</h1>
-    <p>Notas, proyectos e historias interactivas.</p>
-    <small>{posts.length} {posts.length === 1 ? 'entrada' : 'entradas'}</small>
-  </header>
+    <p class="cuenta">
+      <span id="cuenta">{posts.length}</span>
+      <span id="cuenta-txt">{posts.length === 1 ? 'entrada' : 'entradas'}</span>
+    </p>
 
-  {posts.length > 0 ? (
-    <div class="grid">
-      {posts.map((p) => (
-        <PostCard
-          id={p.id}
-          title={p.data.title}
-          description={p.data.description}
-          date={p.data.pubDate}
-          image={primeraImagen(p.body)}
-        />
-      ))}
-    </div>
-  ) : (
-    <p>Todavía no hay entradas.</p>
-  )}
+    <input
+      id="filtro"
+      type="search"
+      placeholder="Buscar por título, tema o etiqueta..."
+      autocomplete="off"
+    />
+
+    {etiquetas.length > 0 && (
+      <div class="chips">
+        <button type="button" class="chip activo" data-tag="">Todas</button>
+        {etiquetas.map((t) => (
+          <button type="button" class="chip" data-tag={t}>{t}</button>
+        ))}
+      </div>
+    )}
+  </section>
+
+  <div class="portadas bento" id="grid">
+    {posts.map((p) => (
+      <PostCard
+        id={p.id}
+        title={p.data.title}
+        description={p.data.description}
+        date={p.data.pubDate}
+        image={p.data.portada ?? primeraImagen(p.body)}
+        tags={p.data.tags}
+      />
+    ))}
+  </div>
+
+  <p id="vacio" class="vacio" hidden>No hay entradas con ese filtro.</p>
 </BaseLayout>
 
 <style>
   .intro {
-    padding-block: 2rem 2.5rem;
+    padding-block: 2rem 1.5rem;
   }
   h1 {
-    margin: 0 0 0.5rem;
-    font-size: clamp(2rem, 5vw, 2.8rem);
-    line-height: 1.1;
+    margin: 0;
+    font-size: clamp(3rem, 12vw, 6rem);
+    line-height: 0.9;
+    text-transform: uppercase;
   }
-  .intro p {
-    margin: 0 0 0.75rem;
-    color: var(--muted);
-    font-size: 1.1rem;
-  }
-  small {
+  .cuenta {
+    margin: 0.5rem 0 1.25rem;
     color: var(--muted);
   }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1.25rem;
+  #filtro {
+    width: 100%;
+    max-width: 520px;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--text);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 1rem;
+  }
+  #filtro:focus {
+    outline: 3px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .chip {
+    padding: 0.3rem 0.85rem;
+    border: 1.5px solid var(--text);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .chip:hover {
+    background: color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  .chip.activo {
+    background: var(--accent);
+    border-color: #111;
+    color: #111;
+  }
+  .vacio {
+    padding: 3rem 0;
+    text-align: center;
+    color: var(--muted);
   }
 </style>
+
+<script>
+  const grid = document.getElementById('grid');
+  const todas = [...grid.children];
+  const filtro = document.getElementById('filtro');
+  const chips = [...document.querySelectorAll('.chip')];
+  const cuenta = document.getElementById('cuenta');
+  const cuentaTxt = document.getElementById('cuenta-txt');
+  const vacio = document.getElementById('vacio');
+
+  const limpiar = (s) =>
+    s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+  let etiqueta = '';
+
+  function aplicar() {
+    const palabras = limpiar(filtro.value).split(/\s+/).filter(Boolean);
+
+    const visibles = todas.filter((c) => {
+      const okTexto = palabras.every((w) => c.dataset.buscar.includes(w));
+      const okTag = !etiqueta || c.dataset.tags.split('|').includes(etiqueta);
+      return okTexto && okTag;
+    });
+
+    // Se reordena el grid solo con las visibles, así el bento se mantiene
+    grid.replaceChildren(...visibles);
+
+    cuenta.textContent = visibles.length;
+    cuentaTxt.textContent = visibles.length === 1 ? 'entrada' : 'entradas';
+    vacio.hidden = visibles.length > 0;
+    chips.forEach((ch) =>
+      ch.classList.toggle('activo', limpiar(ch.dataset.tag) === etiqueta)
+    );
+
+    // Guarda el filtro en la dirección (se puede compartir el enlace)
+    const url = new URL(location.href);
+    filtro.value ? url.searchParams.set('q', filtro.value) : url.searchParams.delete('q');
+    etiqueta ? url.searchParams.set('etiqueta', etiqueta) : url.searchParams.delete('etiqueta');
+    history.replaceState(null, '', url);
+  }
+
+  filtro.addEventListener('input', aplicar);
+  chips.forEach((ch) =>
+    ch.addEventListener('click', () => {
+      const t = limpiar(ch.dataset.tag);
+      etiqueta = etiqueta === t ? '' : t;
+      aplicar();
+    })
+  );
+
+  // Si la dirección trae un filtro (por ejemplo /blog?etiqueta=blog)
+  const params = new URLSearchParams(location.search);
+  filtro.value = params.get('q') ?? '';
+  etiqueta = limpiar(params.get('etiqueta') ?? '');
+  aplicar();
+</script>

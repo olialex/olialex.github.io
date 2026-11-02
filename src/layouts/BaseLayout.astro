@@ -1,14 +1,16 @@
 ---
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import '@fontsource/bebas-neue';
 import '../styles/global.css';
 
 interface Props {
   pageTitle?: string;
   wide?: boolean;
+  conHero?: boolean;
 }
 
-const { pageTitle = 'Mi Blog', wide = false } = Astro.props;
+const { pageTitle = 'Mi Blog', wide = false, conHero = false } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -25,8 +27,10 @@ const { pageTitle = 'Mi Blog', wide = false } = Astro.props;
     } catch (e) {}
   </script>
 </head>
-<body>
-  <Header />
+<body class:list={{ 'con-hero': conHero }}>
+  <Header sobreHero={conHero} />
+
+  <slot name="hero" />
 
   <main class:list={{ container: !wide }}>
     <slot />

@@ -5,10 +5,19 @@
   --text: #2e2a28;
   --muted: #5f5651;
   --border: #cfc6c1;
-  --accent: #fff700;
+  --accent: #FEC700;
   --link: #2e2a28;
   --radius: 12px;
   --container: 1000px;
+
+  --header-h: 50
+
+  body {
+  padding-top: var(--header-h);
+}
+body.con-hero {
+  padding-top: 0;
+}px;
 }
 
 :root[data-theme='dark'] {
@@ -18,8 +27,8 @@
   --text: #d9d4cf;
   --muted: #a09a95;
   --border: #3a3a3a;
-  --accent: #fff700;
-  --link: #fff700;
+  --accent: #FEC700;
+  --link: #FEC700;
 }
 
 * { box-sizing: border-box; }
@@ -48,4 +57,73 @@ img { max-width: 100%; display: block; }
 
 main {
   flex: 1;
+}
+
+:root {
+  --font-titulo: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-titulo);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* Tramado de puntos estilo cómic (para zonas especiales) */
+.trama {
+  --punto: rgba(0, 0, 0, 0.55);
+  background-image: radial-gradient(circle, var(--punto) 1.3px, transparent 1.8px);
+  background-size: 7px 7px;
+}
+
+/* Cuadrícula de portadas: 2 columnas en móvil, dinámica en pantallas anchas */
+.portadas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+@media (min-width: 700px) {
+  .portadas {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* Bento: una portada de cada 7 se muestra al doble de tamaño */
+  .portadas.bento {
+    grid-auto-flow: dense;
+  }
+  .portadas.bento > .portada:nth-child(7n + 1) {
+    grid-column: span 2;
+    grid-row: span 2;
+    aspect-ratio: auto;
+    min-height: 20rem;
+  }
+  .portadas.bento > .portada:nth-child(7n + 1) h3 {
+    font-size: clamp(2.2rem, 4vw, 3.2rem);
+  }
+}
+
+/* Tramado de puntos como fondo decorativo (detrás del contenido) */
+:root { --punto-fondo: rgba(0, 0, 0, 0.12); }
+:root[data-theme='dark'] { --punto-fondo: rgba(255, 247, 0, 0.12); }
+
+.fondo-trama {
+  position: relative;
+  isolation: isolate;
+}
+.fondo-trama::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(circle, var(--punto-fondo) 1.5px, transparent 2px);
+  background-size: 9px 9px;
+  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 90%);
+  mask-image: linear-gradient(to bottom, #000, transparent 90%);
+}
+
+h2 {
+  font-size: 2.2rem;
+  line-height: 1;
 }

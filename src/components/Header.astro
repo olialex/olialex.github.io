@@ -1,138 +1,441 @@
 ---
+interface Props {
+  sobreHero?: boolean;
+}
+const { sobreHero = false } = Astro.props;
+
 const links = [
   { href: '/', label: 'Inicio' },
   { href: '/blog', label: 'Entradas' },
 ];
 const path = Astro.url.pathname;
+const activo = (href) => (href === '/' ? path === '/' : path.startsWith(href));
 ---
 
-<header class="site-header">
+<header class:list={['site-header', { 'sobre-hero': sobreHero }]}>
   <div class="container bar">
     <a href="/" class="logo">
-      <svg class="logo-mark" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-components">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-  <path d="M3 12l3 3l3 -3l-3 -3l-3 3" />
-  <path d="M15 12l3 3l3 -3l-3 -3l-3 3" />
-  <path d="M9 6l3 3l3 -3l-3 -3l-3 3" />
-  <path d="M9 18l3 3l3 -3l-3 -3l-3 3" />
-</svg>
-      <span>Mi Blog</span>
+      <span class="logo-mark">◐</span>
+      <span class="logo-texto">Mi Blog</span>
     </a>
 
     <div class="derecha">
-      <nav>
+      <nav class="nav-escritorio" aria-label="Principal">
         <ul>
           {links.map((l) => (
             <li>
-              <a
-                href={l.href}
-                class:list={{ active: l.href === '/' ? path === '/' : path.startsWith(l.href) }}
-              >
-                {l.label}
-              </a>
+              <a href={l.href} class:list={{ active: activo(l.href) }}>{l.label}</a>
             </li>
           ))}
         </ul>
       </nav>
 
-      <button id="tema" class="tema" type="button" aria-label="Cambiar entre modo claro y oscuro">
-          <svg class="luna" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-moon">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-  <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008" />
-</svg>
-          <svg class="sol" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-brightness-half">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-  <path d="M12 9a3 3 0 0 0 0 6v-6" />
-  <path d="M6 6h3.5l2.5 -2.5l2.5 2.5h3.5v3.5l2.5 2.5l-2.5 2.5v3.5h-3.5l-2.5 2.5l-2.5 -2.5h-3.5v-3.5l-2.5 -2.5l2.5 -2.5l0 -3.5" />
-</svg>
+      <button id="abrir-buscar" class="icono" type="button" aria-label="Buscar entradas">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.5-3.5"></path>
+        </svg>
+      </button>
+
+      <button class="icono tema solo-escritorio" type="button" aria-label="Cambiar entre modo claro y oscuro">
+        <span class="luna">☾</span>
+        <span class="sol">☀</span>
+      </button>
+
+      <button id="menu-btn" class="icono solo-movil" type="button" aria-label="Abrir menú" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path d="M4 7h16M4 12h16M4 17h16"></path>
+        </svg>
       </button>
     </div>
   </div>
+
+  <div class="menu-movil">
+    <ul>
+      {links.map((l) => (
+        <li>
+          <a href={l.href} class:list={{ active: activo(l.href) }}>{l.label}</a>
+        </li>
+      ))}
+    </ul>
+    <button class="tema menu-tema" type="button">Cambiar tema</button>
+  </div>
 </header>
 
+<dialog id="buscador" class="buscador">
+  <div class="caja">
+    <div class="fila">
+      <input id="q" type="search" placeholder="Buscar entradas..." autocomplete="off" />
+      <button id="cerrar-buscar" class="icono" type="button" aria-label="Cerrar">✕</button>
+    </div>
+    <ul id="resultados"></ul>
+  </div>
+</dialog>
+
 <style>
-  .site-header {
+    .site-header {
+    --fg: var(--text);
     position: sticky;
     top: 0;
     z-index: 10;
-    background: color-mix(in srgb, var(--bg) 85%, transparent);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--border);
+    isolation: isolate;
   }
+
+  .site-header.sobre-hero {
+    position: fixed;
+    left: 0;
+    right: 0;
+  }
+
+  /* Fondo sólido, que aparece con suavidad */
+  .site-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    transition: opacity 0.25s;
+  }
+  /* Degradado leve para que se lea sobre la portada */
+  .site-header::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 -1.5rem 0;
+    z-index: -2;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0));
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  /* Sobre la portada: transparente y con letras blancas */
+  .site-header.sobre-hero { --fg: #fff; }
+  .site-header.sobre-hero::before { opacity: 0; }
+  .site-header.sobre-hero::after { opacity: 1; }
+
+  /* Sólido: al pasar el mouse, con el teclado, menú abierto o ya fuera de la portada */
+  .site-header:hover,
+  .site-header:has(:focus-visible),
+  .site-header.solido,
+  .site-header.abierto { --fg: var(--text); }
+
+  .site-header:hover::before,
+  .site-header:has(:focus-visible)::before,
+  .site-header.solido::before,
+  .site-header.abierto::before { opacity: 1; }
+
+  .site-header:hover::after,
+  .site-header:has(:focus-visible)::after,
+  .site-header.solido::after,
+  .site-header.abierto::after { opacity: 0; }
+
   .bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-block: 0.9rem;
+    padding-block: 0.5rem;
   }
   .logo {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--text);
+    gap: 0.45rem;
+    color: var(--fg);
+    transition: color 0.25s;
   }
   .logo:hover { text-decoration: none; }
   .logo-mark {
     display: grid;
     place-items: center;
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     background: var(--accent);
     color: #222;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
+  .logo-texto {
+    font-family: var(--font-titulo);
+    font-size: 1.5rem;
+    line-height: 1;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
   .derecha {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
+    gap: 0.25rem;
   }
-  ul {
+  .nav-escritorio ul {
     display: flex;
-    gap: 1.5rem;
+    gap: 1.1rem;
+    list-style: none;
+    margin: 0 0.5rem 0 0;
+    padding: 0;
+  }
+  .nav-escritorio a {
+    font-family: var(--font-titulo);
+    font-size: 1.15rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--fg);
+    box-shadow: inset 0 -3px 0 transparent;
+    transition: box-shadow 0.15s, color 0.25s;
+  }
+  .nav-escritorio a:hover,
+  .nav-escritorio a.active {
+    text-decoration: none;
+    box-shadow: inset 0 -3px 0 var(--accent);
+  }
+
+  .icono {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--fg);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .icono:hover {
+    background: var(--accent);
+    color: #111;
+  }
+  .tema .sol { display: none; }
+  :global(:root[data-theme='dark']) .tema .sol { display: inline; }
+  :global(:root[data-theme='dark']) .tema .luna { display: none; }
+
+  /* Menú desplegable (solo móvil) */
+  .solo-movil { display: none; }
+  .menu-movil {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding: 0.5rem 1rem 1rem;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .site-header.abierto .menu-movil { display: block; }
+  .menu-movil ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
     list-style: none;
     margin: 0;
     padding: 0;
   }
-  nav a {
-    color: var(--muted);
-    font-size: 0.95rem;
-  }
-  nav a:hover,
-  nav a.active {
+  .menu-movil a {
+    display: block;
+    padding: 0.5rem 0.2rem;
+    font-family: var(--font-titulo);
+    font-size: 1.6rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     color: var(--text);
-    text-decoration: none;
+  }
+  .menu-movil a:hover { text-decoration: none; }
+  .menu-movil a.active {
+    padding-left: 0.7rem;
+    box-shadow: inset 4px 0 0 var(--accent);
+  }
+  .menu-tema {
+    margin-top: 0.6rem;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.9rem;
+    cursor: pointer;
   }
 
-  .tema {
-    width: 36px;
-    height: 36px;
+  @media (max-width: 699px) {
+    .nav-escritorio,
+    .solo-escritorio { display: none; }
+    .solo-movil { display: grid; }
+  }
+  @media (min-width: 700px) {
+    .menu-movil { display: none !important; }
+  }
+
+  /* Buscador */
+  .buscador {
+    width: min(92vw, 560px);
+    margin: 8vh auto auto;
+    padding: 0;
+    border: 2px solid var(--text);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 6px 6px 0 var(--accent);
+  }
+  .buscador::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+  }
+  .caja {
+    padding: 1rem;
+  }
+  .fila {
     display: flex;
-    justify-content: center;
+    gap: 0.6rem;
     align-items: center;
-    background: transparent;
-    border: 1.5px solid var(--border);
-    border-radius: 50%;
+  }
+  #q {
+    flex: 1;
+    min-width: 0;
+    padding: 0.7rem 0.9rem;
+    border: 2px solid var(--text);
+    border-radius: 8px;
+    background: var(--bg);
     color: var(--text);
     font-size: 1rem;
-    cursor: pointer;
-    transition: border-color 0.2s;
   }
-
-
-  .tema:hover { border-color: var(--accent); }
-  .tema .sol { display: none; }
-  :global(:root[data-theme='dark']) .tema .sol { display: inline; }
-  :global(:root[data-theme='dark']) .tema .luna { display: none; }
+  #q:focus {
+    outline: 3px solid var(--accent);
+    outline-offset: 1px;
+  }
+  #resultados {
+    display: block;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+  #resultados :global(li) {
+    border-top: 1px solid var(--border);
+  }
+  #resultados :global(a) {
+    display: block;
+    padding: 0.7rem 0.3rem;
+    color: var(--text);
+  }
+  #resultados :global(a:hover) {
+    text-decoration: none;
+    background: color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+  #resultados :global(strong) {
+    display: block;
+    font-family: var(--font-titulo);
+    font-size: 1.4rem;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  #resultados :global(small) {
+    color: var(--muted);
+  }
+  #resultados :global(.vacio) {
+    padding: 0.8rem 0.3rem;
+    color: var(--muted);
+  }
 </style>
 
 <script>
-  const btn = document.getElementById('tema');
-  btn?.addEventListener('click', () => {
-    const nuevo = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = nuevo;
-    try { localStorage.setItem('tema', nuevo); } catch (e) {}
+    // --- Tema claro/oscuro (botón del header y del menú) ---
+  document.querySelectorAll('.tema').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      const nuevo = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = nuevo;
+      try { localStorage.setItem('tema', nuevo); } catch (e) {}
+    })
+  );
+
+  // --- Header: se vuelve sólido al pasar la portada ---
+  const header = document.querySelector('.site-header');
+  if (header?.classList.contains('sobre-hero')) {
+    const revisar = () => header.classList.toggle('solido', scrollY > innerHeight * 0.85);
+    addEventListener('scroll', revisar, { passive: true });
+    revisar();
+  }
+
+  // --- Menú móvil ---
+  const menuBtn = document.getElementById('menu-btn');
+  menuBtn?.addEventListener('click', () => {
+    const abierto = header.classList.toggle('abierto');
+    menuBtn.setAttribute('aria-expanded', String(abierto));
+  });
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      header.classList.remove('abierto');
+      menuBtn?.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // --- Buscador ---
+  const dialog = document.getElementById('buscador');
+  const input = document.getElementById('q');
+  const lista = document.getElementById('resultados');
+  let datos = null;
+
+  // Quita tildes y mayúsculas para comparar
+  const limpiar = (s) =>
+    s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+  async function cargar() {
+    if (datos) return;
+    try {
+      const r = await fetch(`${import.meta.env.BASE_URL}buscar.json`);
+      datos = await r.json();
+    } catch (e) {
+      datos = [];
+    }
+  }
+
+  function pintar(texto) {
+    const palabras = limpiar(texto).split(/\s+/).filter(Boolean);
+    const encontrados =
+      palabras.length === 0
+        ? datos.slice(0, 5)
+        : datos.filter((p) => {
+            const todo = limpiar([p.title, p.description, ...p.tags].join(' '));
+            return palabras.every((w) => todo.includes(w));
+          });
+
+    if (encontrados.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'vacio';
+      li.textContent = 'No encontré entradas con eso.';
+      lista.replaceChildren(li);
+      return;
+    }
+
+    lista.replaceChildren(
+      ...encontrados.slice(0, 8).map((p) => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = `/blog/${p.id}/`;
+        const t = document.createElement('strong');
+        t.textContent = p.title;
+        const d = document.createElement('small');
+        d.textContent = [p.fecha, ...p.tags].join(' · ');
+        a.append(t, d);
+        li.append(a);
+        return li;
+      })
+    );
+  }
+
+  document.getElementById('abrir-buscar')?.addEventListener('click', async () => {
+    await cargar();
+    input.value = '';
+    pintar('');
+    dialog.showModal();
+    input.focus();
+  });
+
+  input?.addEventListener('input', () => pintar(input.value));
+  document.getElementById('cerrar-buscar')?.addEventListener('click', () => dialog.close());
+  // Clic en el fondo oscuro cierra
+  dialog?.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.close();
   });
 </script>
