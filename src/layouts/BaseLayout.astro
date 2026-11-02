@@ -1,13 +1,14 @@
 ---
 import Header from '../components/Header.astro';
-import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
 import '../styles/global.css';
 
 interface Props {
   pageTitle?: string;
+  wide?: boolean;
 }
 
-const { pageTitle = "Mi Blog" } = Astro.props;
+const { pageTitle = 'Mi Blog', wide = false } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -16,13 +17,21 @@ const { pageTitle = "Mi Blog" } = Astro.props;
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{pageTitle}</title>
+  <script is:inline>
+    try {
+      var t = localStorage.getItem('tema');
+      if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <Header />
-  <Nav />
 
-  <main>
-    <slot /> <!-- Aquí se inyectará el contenido de cada página -->
+  <main class:list={{ container: !wide }}>
+    <slot />
   </main>
+
+  <Footer />
 </body>
 </html>

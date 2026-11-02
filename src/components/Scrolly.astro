@@ -1,0 +1,27 @@
+<div class="scrolly">
+  <slot />
+</div>
+
+<style>
+  /* Ocupa todo el ancho de la pantalla, aunque el texto sea angosto */
+  .scrolly {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    margin-left: -50vw;
+    margin-block: 3rem;
+  }
+</style>
+
+<script>
+  import scrollama from 'scrollama';
+
+  const scroller = scrollama();
+
+  scroller
+    .setup({ step: '.paso', offset: 0.5 })
+    .onStepEnter((r) => r.element.classList.add('is-active'))
+    .onStepExit((r) => r.element.classList.remove('is-active'));
+
+  window.addEventListener('resize', scroller.resize);
+</script>

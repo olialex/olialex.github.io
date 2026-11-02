@@ -1,27 +1,36 @@
 ---
-pubDate: 2026-11-02
 title: "Mi primera historia con Scrollytelling"
+pubDate: 2026-11-02
 description: "Probando efectos de desplazamiento interactivo con JavaScript vanilla y Scrollama."
+tags: [scrollytelling, blog]
 ---
 
-# Historia Interactiva 🗺️
+import Scrolly from '../../components/Scrolly.astro';
+import Paso from '../../components/Paso.astro';
+import img1 from '../../assets/blog/img_392.jpg';
 
-Abajo verás una sección que cambia de color y texto mientras vas haciendo scroll hacia abajo.
+Esto es texto normal de la entrada. Más abajo empieza la historia.
 
-<div id="scrolly">
-  <div class="sticky-graphic">
-    <p id="counter">0</p>
-  </div>
+<Scrolly>
 
-  <div class="step-container">
-    <div class="step" data-step="1">
-      <p>Paso 1: Este es el inicio de la narrativa visual.</p>
-    </div>
-    <div class="step" data-step="2">
-      <p>Paso 2: Al hacer scroll, la gráfica o el texto cambian de estado.</p>
-    </div>
-    <div class="step" data-step="3">
-      <p>Paso 3: ¡Llegaste al final de la historia interactiva!</p>
-    </div>
-  </div>
-</div>
+<Paso imagen={img1} efecto="zoom">
+
+Panel 1: la imagen se acerca lentamente.
+
+</Paso>
+
+<Paso imagen={img1} efecto="fade">
+
+Panel 2: la imagen aparece con un fundido.
+
+</Paso>
+
+<Paso imagen={img1} efecto="pan">
+
+Panel 3: la imagen se desplaza de lado.
+
+</Paso>
+
+</Scrolly>
+
+Y aquí vuelve el texto normal, después de la historia.

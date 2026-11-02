@@ -1,0 +1,95 @@
+---
+import { Image } from 'astro:assets';
+
+interface Props {
+  imagen: ImageMetadata;
+  alt?: string;
+  efecto?: 'zoom' | 'fade' | 'pan' | 'none';
+}
+
+const { imagen, alt = '', efecto = 'none' } = Astro.props;
+---
+
+<section class="paso" data-efecto={efecto}>
+  <div class="media">
+    <Image src={imagen} alt={alt} widths={[640, 1000, 1400, 1920]} sizes="100vw" />
+  </div>
+  <div class="texto">
+    <slot />
+  </div>
+</section>
+
+<style>
+  .paso {
+    position: relative;
+    overflow: hidden;
+    background: #000;
+    color: #fff;
+  }
+  .media {
+    overflow: hidden;
+  }
+  .media :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 100svh;
+    object-fit: contain;
+    margin-inline: auto;
+    transition: transform 6s ease-out;
+  }
+
+  .texto {
+    padding: 1rem 1.25rem 1.5rem;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s, transform 0.6s;
+  }
+  .texto :global(p) {
+    margin: 0;
+  }
+  .paso:global(.is-active) .texto {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Efectos */
+  .paso[data-efecto='zoom']:global(.is-active) .media :global(img) {
+    transform: scale(1.12);
+  }
+  .paso[data-efecto='fade'] .media {
+    opacity: 0;
+    transition: opacity 1s;
+  }
+  .paso[data-efecto='fade']:global(.is-active) .media {
+    opacity: 1;
+  }
+  .paso[data-efecto='pan'] .media :global(img) {
+    transform: scale(1.2) translateX(-6%);
+  }
+  .paso[data-efecto='pan']:global(.is-active) .media :global(img) {
+    transform: scale(1.2) translateX(6%);
+  }
+
+  /* Pantallas anchas: el texto flota sobre la imagen */
+  @media (min-width: 900px) {
+    .texto {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 2rem;
+      max-width: 60ch;
+      margin-inline: auto;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 10px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .media :global(img),
+    .texto,
+    .paso[data-efecto='fade'] .media {
+      transition: none;
+    }
+  }
+</style>

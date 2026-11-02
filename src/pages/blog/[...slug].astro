@@ -1,6 +1,8 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { primeraImagen } from '../../utils/primeraImagen.js';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -12,73 +14,250 @@ export async function getStaticPaths() {
 
 const post = Astro.props;
 const { Content } = await render(post);
+
+const fecha = post.data.pubDate.toLocaleDateString('es-ES', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+const todos = await getCollection('blog');
+const otros = todos.filter((p) => p.id !== post.id);
+
+// Relacionados: los que comparten más etiquetas con esta entrada
+const relacionados = otros
+  .map((p) => ({
+    post: p,
+    comunes: p.data.tags.filter((t) => post.data.tags.includes(t)).length,
+  }))
+  .filter((x) => x.comunes > 0)
+  .sort(
+    (a, b) =>
+      b.comunes - a.comunes ||
+      b.post.data.pubDate.valueOf() - a.post.data.pubDate.valueOf()
+  )
+  .slice(0, 3)
+  .map((x) => x.post);
+
+// Destacados: sin repetir los que ya salen en relacionados
+const destacados = otros
+  .filter((p) => p.data.destacado && !relacionados.some((r) => r.id === p.id))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
 ---
 
-<BaseLayout pageTitle={post.data.title}>
-  <a href="/blog">← Volver a la lista de entradas</a>
+<BaseLayout pageTitle={`${post.data.title} - Mi Blog`} wide>
+  <div class="shell">
+    <aside class="col col-izq">
+      <div class="caja">Columna izquierda<br /><small>(por definir)</small></div>
+    </aside>
 
-  <article>
-    <h1>{post.data.title}</h1>
-    <p><small>Publicado el: {post.data.pubDate.toLocaleDateString('es-ES')}</small></p>
-    <hr />
-    <Content />
-  </article>
+    <article class="principal">
+      <header>
+        <a href="/blog" class="volver">← Entradas</a>
+        <h1>{post.data.title}</h1>
+        <p class="meta">{fecha}</p>
+        {post.data.tags.length > 0 && (
+          <ul class="tags">
+            {post.data.tags.map((t) => <li>{t}</li>)}
+          </ul>
+        )}
+      </header>
+
+      <div class="contenido">
+        <Content />
+      </div>
+
+      <!-- Aquí irán relacionados y destacados (siguiente parte) -->
+    </article>
+
+    <aside class="col col-der">
+      <div class="caja">Columna derecha<br /><small>(por definir)</small></div>
+        </aside>
+  </div>
+
+  <div class="container extra">
+    {relacionados.length > 0 && (
+      <section>
+        <h2>Posts relacionados</h2>
+        <div class="grid">
+          {relacionados.map((p) => (
+            <PostCard
+              id={p.id}
+              title={p.data.title}
+              description={p.data.description}
+              date={p.data.pubDate}
+              image={primeraImagen(p.body)}
+            />
+          ))}
+        </div>
+      </section>
+    )}
+
+    {destacados.length > 0 && (
+      <section>
+        <h2>Destacados</h2>
+        <div class="grid">
+          {destacados.map((p) => (
+            <PostCard
+              id={p.id}
+              title={p.data.title}
+              description={p.data.description}
+              date={p.data.pubDate}
+              image={primeraImagen(p.body)}
+            />
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
 </BaseLayout>
 
-<script>
-  import scrollama from 'scrollama';
-
-  const scroller = scrollama();
-
-  scroller
-    .setup({ step: '.step', offset: 0.5 })
-    .onStepEnter((response) => {
-      const counter = document.getElementById('counter');
-      if (counter) {
-        counter.innerText = response.element.getAttribute('data-step');
-      }
-      response.element.classList.add('is-active');
-    })
-    .onStepExit((response) => {
-      response.element.classList.remove('is-active');
-    });
-
-  window.addEventListener('resize', scroller.resize);
-</script>
-
-<style is:global>
-  #scrolly {
-    position: relative;
-    display: flex;
-    margin: 3rem 0;
-  }
-  .sticky-graphic {
-    position: sticky;
-    top: 20vh;
-    width: 50%;
-    height: 40vh;
-    background: #222;
-    color: white;
-    display: flex;
-    align-items: center;
+<style>
+  .shell {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 70ch) 220px;
     justify-content: center;
-    font-size: 4rem;
-    font-weight: bold;
-    border-radius: 8px;
+    gap: 2.5rem;
+    padding: 2rem 1rem 4rem;
   }
-  .step-container {
-    width: 50%;
-    padding-left: 2rem;
+
+  /* Columnas laterales fijas al hacer scroll */
+  .col {
+    position: sticky;
+    top: 5.5rem;
+    align-self: start;
+    animation: entrar 0.6s ease both;
   }
-  .step {
-    height: 80vh;
+  .col-der { animation-delay: 0.1s; }
+
+  .caja {
+    padding: 1rem;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    color: var(--muted);
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  @keyframes entrar {
+    from { opacity: 0; transform: translateY(12px); }
+  }
+
+  /* Tablet y móvil: se ocultan los laterales */
+  @media (max-width: 1000px) {
+    .shell {
+      display: block;
+      max-width: 70ch;
+      margin-inline: auto;
+    }
+    .col { display: none; }
+  }
+
+  .volver {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  h1 {
+    margin: 1rem 0 0.5rem;
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    line-height: 1.15;
+  }
+  .meta {
+    margin: 0 0 0.75rem;
+    color: var(--muted);
+  }
+  .tags {
     display: flex;
-    align-items: center;
-    opacity: 0.3;
-    transition: opacity 0.3s ease;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0 0 2.5rem;
+    padding: 0;
   }
-  .step.is-active {
-    opacity: 1;
-    color: #0066cc;
+  .tags li {
+    padding: 0.2rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .contenido {
+    font-size: 1.1rem;
+    line-height: 1.75;
+  }
+  .contenido :global(h2) { margin: 2.5rem 0 1rem; font-size: 1.6rem; }
+  .contenido :global(h3) { margin: 2rem 0 0.75rem; font-size: 1.25rem; }
+  .contenido :global(p > img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 70vh;
+    object-fit: contain;
+    margin-block: 1.5rem;
+    border-radius: 1rem;
+  }
+  .contenido :global(blockquote) {
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+    border-left: 3px solid var(--accent);
+    color: var(--muted);
+  }
+  .contenido :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin-block: 1.5rem;
+    font-size: 0.95rem;
+  }
+  .contenido :global(th),
+  .contenido :global(td) {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+  .contenido :global(code) {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.1em 0.35em;
+    border-radius: 6px;
+    font-size: 0.9em;
+  }
+  .contenido :global(pre) {
+    overflow-x: auto;
+    padding: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .contenido :global(pre code) {
+    border: 0;
+    padding: 0;
+    background: none;
+  }
+  .contenido :global(a) {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 3px;
+    text-underline-offset: 3px;
+  }
+
+    .extra {
+    padding-bottom: 3rem;
+  }
+  .extra section {
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--border);
+    margin-top: 2.5rem;
+  }
+  .extra h2 {
+    margin: 0 0 1.5rem;
+    font-size: 1.4rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
   }
 </style>

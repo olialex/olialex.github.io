@@ -1,0 +1,58 @@
+---
+const redes = [
+  { nombre: 'YouTube', url: 'https://youtube.com/@tucanal' },
+  { nombre: 'Instagram', url: 'https://instagram.com/tuusuario' },
+  { nombre: 'X', url: 'https://x.com/tuusuario' },
+  { nombre: 'GitHub', url: 'https://github.com/olialex' },
+  { nombre: 'Telegram', url: 'https://t.me/tucanal' },
+];
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container inner">
+    <p>© {year} Mi Blog</p>
+    <ul>
+      {redes.map((r) => (
+        <li>
+          <a href={r.url} target="_blank" rel="noopener noreferrer">{r.nombre}</a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 4rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    justify-content: space-between;
+    padding-block: 1.5rem;
+  }
+  p {
+    margin: 0;
+  }
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  a {
+    color: var(--muted);
+  }
+  a:hover {
+    color: var(--text);
+    text-decoration: none;
+  }
+</style>

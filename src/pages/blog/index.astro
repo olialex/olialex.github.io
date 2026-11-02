@@ -1,23 +1,57 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { primeraImagen } from '../../utils/primeraImagen.js';
 
 const posts = await getCollection('blog');
 posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
 <BaseLayout pageTitle="Entradas - Mi Blog">
-  <h2>Entradas del Blog 📝</h2>
+  <header class="intro">
+    <h1>Entradas</h1>
+    <p>Notas, proyectos e historias interactivas.</p>
+    <small>{posts.length} {posts.length === 1 ? 'entrada' : 'entradas'}</small>
+  </header>
 
-  <ul>
-    {posts.map((post) => (
-      <li>
-        <a href={`/blog/${post.id}/`}>
-          <h3>{post.data.title}</h3>
-        </a>
-        <p><small>{post.data.pubDate.toLocaleDateString('es-ES')}</small></p>
-        <p>{post.data.description}</p>
-      </li>
-    ))}
-  </ul>
+  {posts.length > 0 ? (
+    <div class="grid">
+      {posts.map((p) => (
+        <PostCard
+          id={p.id}
+          title={p.data.title}
+          description={p.data.description}
+          date={p.data.pubDate}
+          image={primeraImagen(p.body)}
+        />
+      ))}
+    </div>
+  ) : (
+    <p>Todavía no hay entradas.</p>
+  )}
 </BaseLayout>
+
+<style>
+  .intro {
+    padding-block: 2rem 2.5rem;
+  }
+  h1 {
+    margin: 0 0 0.5rem;
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    line-height: 1.1;
+  }
+  .intro p {
+    margin: 0 0 0.75rem;
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+  small {
+    color: var(--muted);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+  }
+</style>

@@ -1,19 +1,73 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import PostCard from '../components/PostCard.astro';
+import { primeraImagen } from '../utils/primeraImagen.js';
+
+const posts = await getCollection('blog');
+posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const destacados = posts.filter((p) => p.data.destacado).slice(0, 3);
+const ultimos = posts.slice(0, 6);
 ---
 
-<BaseLayout pageTitle="Inicio - Mi Blog Personal">
-  <section>
-    <h2>¡Bienvenido a mi espacio digital! 👋</h2>
-    <p>
-      Este blog está construido con Astro, Markdown, Obsidian y JavaScript Vanilla. 
-      Aquí comparto proyectos, notas de aprendizaje e historias interactivas.
-    </p>
-  </section>
+<BaseLayout pageTitle="Inicio - Mi Blog" wide>
+  <Hero
+    title="Ideas, proyectos e historias interactivas"
+    subtitle="Un espacio para escribir, dibujar y experimentar con scrollytelling."
+  />
 
-  <section>
-    <h2>Últimas novedades 🚀</h2>
-    <p>Explora mis artículos y proyectos con scrollytelling en la sección de entradas.</p>
-    <a href="/blog">Ver todas las entradas →</a>
-  </section>
+  <div class="container">
+    {destacados.length > 0 && (
+      <section>
+        <h2>Destacados</h2>
+        <div class="grid">
+          {destacados.map((p) => (
+            <PostCard
+              id={p.id}
+              title={p.data.title}
+              description={p.data.description}
+              date={p.data.pubDate}
+              image={primeraImagen(p.body)}
+            />
+          ))}
+        </div>
+      </section>
+    )}
+
+    <section>
+      <h2>Últimos posts</h2>
+      <div class="grid">
+        {ultimos.map((p) => (
+          <PostCard
+            id={p.id}
+            title={p.data.title}
+            description={p.data.description}
+            date={p.data.pubDate}
+            image={primeraImagen(p.body)}
+          />
+        ))}
+      </div>
+      <p class="mas"><a href="/blog">Ver todas las entradas →</a></p>
+    </section>
+  </div>
 </BaseLayout>
+
+<style>
+  section {
+    padding-block: 3rem 1rem;
+  }
+  h2 {
+    margin: 0 0 1.5rem;
+    font-size: 1.5rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+  }
+  .mas {
+    margin-top: 1.5rem;
+  }
+</style>
