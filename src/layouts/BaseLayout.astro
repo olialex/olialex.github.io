@@ -1,0 +1,28 @@
+---
+import Header from '../components/Header.astro';
+import Nav from '../components/Nav.astro';
+import '../styles/global.css';
+
+interface Props {
+  pageTitle?: string;
+}
+
+const { pageTitle = "Mi Blog" } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{pageTitle}</title>
+</head>
+<body>
+  <Header />
+  <Nav />
+
+  <main>
+    <slot /> <!-- Aquí se inyectará el contenido de cada página -->
+  </main>
+</body>
+</html>

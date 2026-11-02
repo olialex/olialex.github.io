@@ -1,0 +1,17 @@
+/* src/styles/header.css */
+.site-header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 2.2rem;
+}
+
+.site-header p {
+  margin: 0.5rem 0 0 0;
+  opacity: 0.9;
+}

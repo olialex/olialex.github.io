@@ -1,16 +1,19 @@
 ---
+import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout pageTitle="Inicio - Mi Blog Personal">
+  <section>
+    <h2>¡Bienvenido a mi espacio digital! 👋</h2>
+    <p>
+      Este blog está construido con Astro, Markdown, Obsidian y JavaScript Vanilla. 
+      Aquí comparto proyectos, notas de aprendizaje e historias interactivas.
+    </p>
+  </section>
+
+  <section>
+    <h2>Últimas novedades 🚀</h2>
+    <p>Explora mis artículos y proyectos con scrollytelling en la sección de entradas.</p>
+    <a href="/blog">Ver todas las entradas →</a>
+  </section>
+</BaseLayout>

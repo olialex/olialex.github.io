@@ -1,0 +1,18 @@
+---
+import '../styles/header.css';
+
+interface Props {
+  title?: string;
+  tagline?: string;
+}
+
+const { 
+  title = "Mi Blog Personal", 
+  tagline = "Desarrollo web, notas y scrollytelling" 
+} = Astro.props;
+---
+
+<header class="site-header">
+  <h1>{title}</h1>
+  <p>{tagline}</p>
+</header>

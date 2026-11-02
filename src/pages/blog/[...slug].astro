@@ -1,0 +1,84 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: post,
+  }));
+}
+
+const post = Astro.props;
+const { Content } = await render(post);
+---
+
+<BaseLayout pageTitle={post.data.title}>
+  <a href="/blog">← Volver a la lista de entradas</a>
+
+  <article>
+    <h1>{post.data.title}</h1>
+    <p><small>Publicado el: {post.data.pubDate.toLocaleDateString('es-ES')}</small></p>
+    <hr />
+    <Content />
+  </article>
+</BaseLayout>
+
+<script>
+  import scrollama from 'scrollama';
+
+  const scroller = scrollama();
+
+  scroller
+    .setup({ step: '.step', offset: 0.5 })
+    .onStepEnter((response) => {
+      const counter = document.getElementById('counter');
+      if (counter) {
+        counter.innerText = response.element.getAttribute('data-step');
+      }
+      response.element.classList.add('is-active');
+    })
+    .onStepExit((response) => {
+      response.element.classList.remove('is-active');
+    });
+
+  window.addEventListener('resize', scroller.resize);
+</script>
+
+<style is:global>
+  #scrolly {
+    position: relative;
+    display: flex;
+    margin: 3rem 0;
+  }
+  .sticky-graphic {
+    position: sticky;
+    top: 20vh;
+    width: 50%;
+    height: 40vh;
+    background: #222;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    font-weight: bold;
+    border-radius: 8px;
+  }
+  .step-container {
+    width: 50%;
+    padding-left: 2rem;
+  }
+  .step {
+    height: 80vh;
+    display: flex;
+    align-items: center;
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
+  }
+  .step.is-active {
+    opacity: 1;
+    color: #0066cc;
+  }
+</style>
