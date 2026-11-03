@@ -1,17 +1,13 @@
 ---
-const redes = [
-  { nombre: 'YouTube', url: 'https://youtube.com/@tucanal' },
-  { nombre: 'Instagram', url: 'https://instagram.com/tuusuario' },
-  { nombre: 'X', url: 'https://x.com/tuusuario' },
-  { nombre: 'GitHub', url: 'https://github.com/olialex' },
-  { nombre: 'Telegram', url: 'https://t.me/tucanal' },
-];
+import { redes, sitio } from '../utils/sitio.js';
+
+
 const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
   <div class="container inner">
-    <p>© {year} Mi Blog</p>
+    <p>© {year} { sitio.nombre }</p>
     <ul>
       {redes.map((r) => (
         <li>

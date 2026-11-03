@@ -1,16 +1,44 @@
 ---
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { getImage } from 'astro:assets';
 import '@fontsource/bebas-neue';
 import '../styles/global.css';
+import { sitio } from '../utils/sitio.js';
 
 interface Props {
   pageTitle?: string;
+  descripcion?: string;
+  imagen?: ImageMetadata | null;
+  tipo?: 'website' | 'article';
   wide?: boolean;
   conHero?: boolean;
 }
 
-const { pageTitle = 'Mi Blog', wide = false, conHero = false } = Astro.props;
+const {
+  pageTitle,
+  descripcion = sitio.descripcion,
+  imagen = null,
+  tipo = 'website',
+  wide = false,
+  conHero = false,
+} = Astro.props;
+
+const titulo = pageTitle ? `${pageTitle} · ${sitio.nombre}` : sitio.nombre;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+
+// Imagen al compartir: la portada recortada a 1200×630, o la imagen general del sitio
+let ogImagen = new URL(sitio.imagenCompartir, Astro.site).href;
+if (imagen) {
+  const optimizada = await getImage({
+    src: imagen,
+    width: 1200,
+    height: 630,
+    format: 'jpg',
+    quality: 75,
+  });
+  ogImagen = new URL(optimizada.src, Astro.site).href;
+}
 ---
 
 <!DOCTYPE html>
@@ -18,7 +46,22 @@ const { pageTitle = 'Mi Blog', wide = false, conHero = false } = Astro.props;
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{pageTitle}</title>
+  <title>{titulo}</title>
+  <meta name="description" content={descripcion} />
+  <link rel="canonical" href={canonical} />
+
+  <link rel="icon" type="image/png" href="/favicon.png" />
+
+  <meta property="og:type" content={tipo} />
+  <meta property="og:site_name" content={sitio.nombre} />
+  <meta property="og:title" content={titulo} />
+  <meta property="og:description" content={descripcion} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:image" content={ogImagen} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+
   <script is:inline>
     try {
       var t = localStorage.getItem('tema');

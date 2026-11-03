@@ -10,13 +10,9 @@ posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 const etiquetas = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
 ---
 
-<BaseLayout pageTitle="Entradas - Mi Blog">
+<BaseLayout pageTitle="Entradas">
   <section class="intro fondo-trama">
     <h1>Entradas</h1>
-    <p class="cuenta">
-      <span id="cuenta">{posts.length}</span>
-      <span id="cuenta-txt">{posts.length === 1 ? 'entrada' : 'entradas'}</span>
-    </p>
 
     <input
       id="filtro"
@@ -56,29 +52,28 @@ const etiquetas = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
     padding-block: 2rem 1.5rem;
   }
   h1 {
-    margin: 0;
+    margin: 0 0 1rem 0;
     font-size: clamp(3rem, 12vw, 6rem);
     line-height: 0.9;
     text-transform: uppercase;
-  }
-  .cuenta {
-    margin: 0.5rem 0 1.25rem;
-    color: var(--muted);
   }
   #filtro {
     width: 100%;
     max-width: 520px;
     padding: 0.75rem 1rem;
-    border: 2px solid var(--text);
     border-radius: 8px;
     background: var(--surface);
     color: var(--text);
     font-size: 1rem;
+    transition: .15s all ease;
+
+    border: solid 2px var(--border-transparente);
   }
   #filtro:focus {
-    outline: 3px solid var(--accent);
-    outline-offset: 1px;
+   outline: none;
+   border: solid 2px var(--accent);
   }
+
   .chips {
     display: flex;
     flex-wrap: wrap;
@@ -87,7 +82,7 @@ const etiquetas = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
   }
   .chip {
     padding: 0.3rem 0.85rem;
-    border: 1.5px solid var(--text);
+    border: 2px solid var(--border-transparente);
     border-radius: 999px;
     background: transparent;
     color: var(--text);
@@ -115,7 +110,6 @@ const etiquetas = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
   const todas = [...grid.children];
   const filtro = document.getElementById('filtro');
   const chips = [...document.querySelectorAll('.chip')];
-  const cuenta = document.getElementById('cuenta');
   const cuentaTxt = document.getElementById('cuenta-txt');
   const vacio = document.getElementById('vacio');
 
@@ -136,9 +130,6 @@ const etiquetas = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
     // Se reordena el grid solo con las visibles, así el bento se mantiene
     grid.replaceChildren(...visibles);
 
-    cuenta.textContent = visibles.length;
-    cuentaTxt.textContent = visibles.length === 1 ? 'entrada' : 'entradas';
-    vacio.hidden = visibles.length > 0;
     chips.forEach((ch) =>
       ch.classList.toggle('activo', limpiar(ch.dataset.tag) === etiqueta)
     );

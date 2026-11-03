@@ -4,6 +4,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import PostCard from '../../components/PostCard.astro';
 import { primeraImagen } from '../../utils/primeraImagen.js';
 import Hero from '../../components/Hero.astro';
+import { minutosDe } from '../../utils/tiempoLectura.js';
+import Compartir from '../../components/Compartir.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -19,6 +21,8 @@ const post = Astro.props;
 const { Content } = await render(post);
 
 const portada = post.data.portada ?? primeraImagen(post.body);
+const minutos = minutosDe(post);
+const urlEntrada = new URL(Astro.url.pathname, Astro.site).href;
 
 const fecha = post.data.pubDate.toLocaleDateString('es-ES', {
   day: 'numeric',
@@ -53,13 +57,20 @@ const destacados = otros
 
 ---
 
-<BaseLayout pageTitle={`${post.data.title} - Mi Blog`} wide conHero={!!portada}>
+<BaseLayout
+  pageTitle={post.data.title}
+  descripcion={post.data.description}
+  imagen={portada}
+  tipo="article"
+  wide
+  conHero={!!portada}
+>
 
   <Fragment slot="hero">
     {portada && (
       <Hero
         esEntrada
-        slides={[{ image: portada, title: post.data.title, tag: post.data.tags[0], fecha }]}
+        slides={[{ image: portada, title: post.data.title, tag: post.data.tags[0], fecha, minutos }]}
       />
     )}
   </Fragment>
@@ -71,11 +82,16 @@ const destacados = otros
 
     <article class="principal">
       <header>
-        <a href="/blog" class="volver">← Entradas</a>
+        <a href="/blog" class="volver">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path d="M15 6l-6 6l6 6" />
+</svg>
+        Entradas</a>
         {!portada && (
           <>
             <h1>{post.data.title}</h1>
-            <p class="meta">{fecha}</p>
+            <p class="meta">{fecha} · {minutos} min de lectura</p>
           </>
         )}
         {post.data.tags.length > 0 && (
@@ -89,19 +105,21 @@ const destacados = otros
         <Content />
       </div>
 
-      <!-- Aquí irán relacionados y destacados (siguiente parte) -->
+      <div class="compartir-final">
+        <Compartir titulo={post.data.title} url={urlEntrada} />
+      </div>
     </article>
 
     <aside class="col col-der">
-      <div class="caja">Columna derecha<br /><small>(por definir)</small></div>
-        </aside>
+      <Compartir titulo={post.data.title} url={urlEntrada} vertical />
+    </aside>
   </div>
 
   <div class="container extra">
     {relacionados.length > 0 && (
       <section>
         <h2>Posts relacionados</h2>
-        <div class="grid">
+        <div class="portadas">
           {relacionados.map((p) => (
             <PostCard
               id={p.id}
@@ -109,6 +127,7 @@ const destacados = otros
               description={p.data.description}
               date={p.data.pubDate}
               image={p.data.portada ?? primeraImagen(p.body)}
+              tags={p.data.tags}
             />
           ))}
         </div>
@@ -118,7 +137,7 @@ const destacados = otros
     {destacados.length > 0 && (
       <section>
         <h2>Destacados</h2>
-        <div class="grid">
+        <div class="portadas">
           {destacados.map((p) => (
             <PostCard
               id={p.id}
@@ -126,6 +145,7 @@ const destacados = otros
               description={p.data.description}
               date={p.data.pubDate}
               image={p.data.portada ?? primeraImagen(p.body)}
+              tags={p.data.tags}
             />
           ))}
         </div>
@@ -163,6 +183,15 @@ const destacados = otros
     font-size: 0.9rem;
   }
 
+  .compartir-final {
+    margin-top: 3rem;
+  }
+  @media (min-width: 1001px) {
+    .compartir-final {
+      display: none;
+    }
+  }
+
   @keyframes entrar {
     from { opacity: 0; transform: translateY(12px); }
   }
@@ -180,9 +209,14 @@ const destacados = otros
   .volver {
     color: var(--muted);
     font-size: 0.9rem;
+
+    display: flex;
+    align-items: center;
+
+    margin-bottom: .3rem;
   }
   h1 {
-    margin: 1rem 0 0.5rem;
+    margin: 3rem 0 0.5rem;
     font-size: clamp(2rem, 5vw, 2.8rem);
     line-height: 1.15;
   }
@@ -195,15 +229,16 @@ const destacados = otros
     flex-wrap: wrap;
     gap: 0.5rem;
     list-style: none;
-    margin: 0 0 2.5rem;
+    margin: .5rem 0 1.5rem 0;
     padding: 0;
   }
   .tags li {
     padding: 0.2rem 0.7rem;
-    border: 1px solid var(--border);
+    border: 2px solid var(--border-transparente);
     border-radius: 999px;
     color: var(--muted);
     font-size: 0.85rem;
+    transition: all .25s ease;
   }
 
   .tags a {
@@ -211,6 +246,7 @@ const destacados = otros
   }
   .tags li:hover {
     background: var(--accent);
+    border: 2px solid var(--border);
     color: #111;
   }
 
@@ -285,9 +321,10 @@ const destacados = otros
     margin: 0 0 1.5rem;
     font-size: 1.4rem;
   }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1.25rem;
-  }
+
+  .contenido :global(p) { margin-block: 1em; }
+  .contenido :global(ul),
+  .contenido :global(ol) { margin-block: 1em; padding-left: 1.5rem; }
+  .contenido :global(li) { margin-block: 0.25em; }
+  .contenido :global(hr) { margin-block: 2rem; border: 0; border-top: 1px solid var(--border); }
 </style>

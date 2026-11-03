@@ -3,14 +3,24 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/Hero.astro';
 import PostCard from '../components/PostCard.astro';
-import Slider from '../components/Slider.astro';
+import Sidebar from '../components/Sidebar.astro';
 import { primeraImagen } from '../utils/primeraImagen.js';
+import { sitio } from '../utils/sitio.js';
+import { minutosDe } from '../utils/tiempoLectura.js';
 
 const posts = await getCollection('blog');
 posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
-const destacados = posts.filter((p) => p.data.destacado).slice(0, 5);
-const resto = posts.filter((p) => !destacados.some((d) => d.id === p.id));
+const t = sitio.textos;
+const { ultimas: nUltimas, sugeridos: nSugeridos } = sitio.limites;
+
+const ultimos = posts.slice(0, nUltimas);
+
+const resto = posts.slice(nUltimas);
+const sugeridos = [
+  ...resto.filter((p) => p.data.destacado),
+  ...resto.filter((p) => !p.data.destacado),
+].slice(0, nSugeridos);
 
 const slidesHero = posts
   .map((p) => ({ p, image: p.data.portada ?? primeraImagen(p.body) }))
@@ -27,40 +37,26 @@ const slidesHero = posts
       timeZone: 'UTC',
     }),
     href: `/blog/${p.id}/`,
+    minutos: minutosDe(p),
   }));
 ---
 
-<BaseLayout pageTitle="Inicio - Mi Blog" wide conHero={slidesHero.length > 0}>
+<BaseLayout pageTitle="Inicio" wide conHero={slidesHero.length > 0}>
   <Fragment slot="hero">
     {slidesHero.length > 0 && <Hero slides={slidesHero} />}
   </Fragment>
 
-  <div class="container">
-    {destacados.length > 0 && (
-      <section class="destacados fondo-trama">
-        <h2>Destacados</h2>
-        <Slider>
-          {destacados.map((p) => (
-            <div>
-              <PostCard
-                id={p.id}
-                title={p.data.title}
-                description={p.data.description}
-                date={p.data.pubDate}
-                image={p.data.portada ?? primeraImagen(p.body)}
-                tags={p.data.tags}
-              />
-            </div>
-          ))}
-        </Slider>
-      </section>
-    )}
+    <div class="container main-layout">
+    <h1 class="solo-lectores">{sitio.nombre}</h1>
 
-    {resto.length > 0 && (
-      <section>
-        <h2>Todas las entradas</h2>
-        <div class="portadas bento">
-          {resto.map((p) => (
+    <div class="seccion-posts">
+      <section class="seccion">
+        <div class="header-seccion">
+          <h2>{t.ultimas}</h2>
+          <a href="/blog">{t.verTodas}</a>
+        </div>
+        <div class="portadas dos-col">
+          {ultimos.map((p) => (
             <PostCard
               id={p.id}
               title={p.data.title}
@@ -71,20 +67,144 @@ const slidesHero = posts
             />
           ))}
         </div>
-        <p class="mas"><a href="/blog">Explorar todas →</a></p>
       </section>
-    )}
+
+      {sugeridos.length > 0 && (
+        <section class="seccion">
+          <div class="header-seccion">
+            <h2>{t.sugeridos}</h2>
+          </div>
+          <div class="portadas">
+            {sugeridos.map((p) => (
+              <PostCard
+                id={p.id}
+                title={p.data.title}
+                description={p.data.description}
+                date={p.data.pubDate}
+                image={p.data.portada ?? primeraImagen(p.body)}
+                tags={p.data.tags}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <a href="/blog" class="boton-cargar-mas card-trama">
+        <div class="contenido-boton">
+          <span class="icono-fuego">🔥</span>
+          <div class="texto-boton">
+            <span class="titulo-btn">{t.explorarTitulo}</span>
+            <span class="sub-btn">{t.explorarSub}</span>
+          </div>
+        </div>
+<svg class="flecha-btn" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path d="M9 6l6 6l-6 6" />
+</svg>
+      </a>
+    </div>
+
+    <div class="col-sidebar">
+      <Sidebar />
+    </div>
   </div>
 </BaseLayout>
 
 <style>
-  section {
-    padding-block: 3rem 1rem;
+  .main-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding-block: 3rem;
   }
-  h2 {
-    margin: 0 0 1.25rem;
+
+  @media (min-width: 1024px) {
+    .main-layout {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .seccion-posts {
+      grid-column: span 8;
+    }
+    .col-sidebar {
+      grid-column: span 4;
+    }
   }
-  .mas {
-    margin-top: 1.5rem;
+
+    .header-seccion {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .header-seccion a {
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .seccion + .seccion {
+    margin-top: 3rem;
+  }
+  .portadas.dos-col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .boton-cargar-mas {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--accent);
+    color: #111;
+    border-radius: 1rem;
+    padding: 1.25rem 1.5rem;
+    margin-top: 2rem;
+    box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.12);
+    font-weight: 800;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  @media (hover: hover) {
+    .boton-cargar-mas:hover {
+      transform: translateY(-2px);
+      box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.18);
+      text-decoration: none;
+      color: #111;
+    }
+  }
+  .boton-cargar-mas:active {
+    transform: translateY(1px);
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  .contenido-boton {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .icono-fuego {
+    font-size: 1.8rem;
+  }
+  .texto-boton {
+    display: flex;
+    flex-direction: column;
+  }
+  .titulo-btn {
+    font-family: var(--font-titulo);
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    line-height: 1.1;
+  }
+  .sub-btn {
+    font-size: 0.8rem;
+    font-weight: 600;
+    opacity: 0.85;
+  }
+  .flecha-btn {
+    font-size: 1.5rem;
+    font-weight: 900;
+    transition: transform 0.2s;
+  }
+  .boton-cargar-mas:hover .flecha-btn {
+    transform: translateX(4px);
   }
 </style>

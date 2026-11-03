@@ -1,0 +1,112 @@
+---
+interface Props {
+  titulo: string;
+  url: string;
+  vertical?: boolean;
+}
+const { titulo, url, vertical = false } = Astro.props;
+
+const u = encodeURIComponent(url);
+const t = encodeURIComponent(titulo);
+
+const redes = [
+  { nombre: 'WhatsApp', href: `https://wa.me/?text=${t}%20${u}` },
+  { nombre: 'Telegram', href: `https://t.me/share/url?url=${u}&text=${t}` },
+  { nombre: 'X', href: `https://x.com/intent/post?text=${t}&url=${u}` },
+];
+---
+
+<div class:list={['compartir', { vertical }]} data-titulo={titulo} data-url={url}>
+  <h3>Compartir</h3>
+  <div class="botones">
+    <button type="button" class="btn nativo" hidden>Compartir ↗</button>
+    {redes.map((r) => (
+      <a class="btn" href={r.href} target="_blank" rel="noopener noreferrer">{r.nombre}</a>
+    ))}
+    <button type="button" class="btn copiar">Copiar enlace</button>
+  </div>
+</div>
+
+<style>
+  h3 {
+    margin-bottom: 0.6rem;
+    font-size: 1.3rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.9rem;
+    border: 1.5px solid var(--fg);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn[hidden] {
+    display: none;
+  }
+  .btn:hover {
+    background: var(--accent);
+    color: #111;
+    text-decoration: none;
+  }
+
+  /* Versión para la columna lateral: tarjeta con botones apilados */
+  .vertical {
+    padding: 1.25rem;
+    border-radius: 1rem;
+    background-color: var(--surface);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  }
+  .vertical .botones {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Versión para el final de la entrada */
+  .compartir:not(.vertical) {
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border);
+  }
+</style>
+
+<script>
+  document.querySelectorAll('.compartir').forEach((caja) => {
+    const { titulo, url } = caja.dataset;
+    const nativo = caja.querySelector('.nativo');
+    const copiar = caja.querySelector('.copiar');
+
+    // Menú de compartir del sistema (si el navegador lo tiene)
+    if (navigator.share) {
+      nativo.hidden = false;
+      nativo.addEventListener('click', () => {
+        navigator.share({ title: titulo, url }).catch(() => {});
+      });
+    }
+
+    copiar.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+        const original = copiar.textContent;
+        copiar.textContent = '¡Copiado!';
+        setTimeout(() => (copiar.textContent = original), 1800);
+      } catch (e) {
+        prompt('Copia el enlace:', url);
+      }
+    });
+  });
+</script>

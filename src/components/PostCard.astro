@@ -1,5 +1,7 @@
 ---
 import { Image } from 'astro:assets';
+import { getEntry } from 'astro:content';
+import { minutosDe } from '../utils/tiempoLectura.js';
 
 interface Props {
   id: string;
@@ -12,6 +14,9 @@ interface Props {
 
 // <-- Y asegúrate de extraer 'description' aquí:
 const { id, title, description, date, image, tags = [] } = Astro.props;
+
+const entrada = await getEntry('blog', id);
+const minutos = entrada ? minutosDe(entrada) : null;
 
 const fecha = date.toLocaleDateString('es-ES', {
   day: 'numeric',
@@ -28,7 +33,7 @@ const etiquetas = tags.map(limpiar).join('|');
 <a class="portada" href={`/blog/${id}/`} data-buscar={buscar} data-tags={etiquetas}>
   <div class="arte">
     {image ? (
-      <Image src={image} alt="" widths={[300, 600]} sizes="(min-width: 700px) 280px, 50vw" />
+      <Image src={image} alt="" widths={[320, 640, 960, 1280]} sizes="(min-width: 700px) 490px, 50vw" />
     ) : (
       <div class="vacio trama"></div>
     )}
@@ -39,7 +44,7 @@ const etiquetas = tags.map(limpiar).join('|');
   <div class="info">
     {tags[0] && <span class="tag">{tags[0]}</span>}
     <h3>{title}</h3>
-    <small>{fecha}</small>
+        <small>{fecha}{minutos ? ` · ${minutos} min` : ''}</small>
   </div>
 </a>
 
@@ -49,15 +54,14 @@ const etiquetas = tags.map(limpiar).join('|');
     display: block;
     aspect-ratio: 3 / 4;
     overflow: hidden;
-    border: 2px solid var(--text);
-    border-radius: 6px;
+    border: 3px solid var(--text);
     background: #000;
     color: #fff;
     transition: transform 0.2s, box-shadow 0.2s;
   }
   .portada:hover {
     transform: translate(-3px, -3px);
-    box-shadow: 6px 6px 0 var(--accent);
+    box-shadow: 8px 8px 0 var(--text);
     text-decoration: none;
   }
 

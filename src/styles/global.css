@@ -1,41 +1,36 @@
 :root {
   color-scheme: light;
-  --bg: #e4ddd9;
-  --surface: #eee9e5;
+  --bg: #F3EFEE;
+  --surface: #FFFFFF;
   --text: #2e2a28;
   --muted: #5f5651;
-  --border: #cfc6c1;
-  --accent: #FEC700;
+  --border: #0D0D11;
+  --border-transparente: rgba(0,0,0, 0.5);
+  --accent: #ffd700;
   --link: #2e2a28;
   --radius: 12px;
   --container: 1000px;
-
-  --header-h: 50
-
-  body {
-  padding-top: var(--header-h);
-}
-body.con-hero {
-  padding-top: 0;
-}px;
+  --header-h: 50px;
+  --fg: #0D0D11;
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #222222;
-  --surface: #2b2b2b;
+  --bg: #0D0D11;
+  --surface: #16161C;
   --text: #d9d4cf;
   --muted: #a09a95;
-  --border: #3a3a3a;
-  --accent: #FEC700;
-  --link: #FEC700;
+  --border: #ffd700;
+  --border-transparente: rgba(255, 215, 0, 0.5);
+  --accent: #ffd700;
+  --link: #ffd700;
+  --fg: #ffd700;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: var(--bg);
   color: var(--text);
   margin: 0;
   line-height: 1.6;
@@ -44,6 +39,10 @@ body {
   flex-direction: column;
   overflow-x: clip;
   transition: background-color 0.25s, color 0.25s;
+
+  background-color: var(--bg);
+    background-image: radial-gradient(var(--punto-fondo) 1.5px, transparent 1.5px);
+  background-size: 18px 18px;
 }
 
 a { color: var(--link); text-decoration: none; }
@@ -80,12 +79,12 @@ h1, h2, h3 {
 .portadas {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  gap: .5rem;
 }
 @media (min-width: 700px) {
   .portadas {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .7rem;
   }
 
   /* Bento: una portada de cada 7 se muestra al doble de tamaño */
@@ -104,26 +103,32 @@ h1, h2, h3 {
 }
 
 /* Tramado de puntos como fondo decorativo (detrás del contenido) */
-:root { --punto-fondo: rgba(0, 0, 0, 0.12); }
-:root[data-theme='dark'] { --punto-fondo: rgba(255, 247, 0, 0.12); }
-
-.fondo-trama {
-  position: relative;
-  isolation: isolate;
+:root {
+  --punto-fondo: rgba(0, 0, 0, 0.2);
+  --punto-card: rgba(0, 0, 0, 0.1); 
 }
-.fondo-trama::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: radial-gradient(circle, var(--punto-fondo) 1.5px, transparent 2px);
-  background-size: 9px 9px;
-  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 90%);
-  mask-image: linear-gradient(to bottom, #000, transparent 90%);
+:root[data-theme='dark'] {
+  --punto-fondo: rgba(255, 215, 0, 0.12);
+  --punto-card: rgba(255, 255, 255, 0.06);
 }
 
 h2 {
   font-size: 2.2rem;
   line-height: 1;
+}
+
+/* Texto solo para lectores de pantalla y buscadores */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Cards con tramado de puntos */
+.card-trama {
+  background-image: radial-gradient(var(--punto-card) 1.3px, transparent 1.6px);
+  background-size: 10px 10px;
 }
